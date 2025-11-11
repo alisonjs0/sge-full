@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🔥 Fire Guard - Sistema de Gestão de Extintores
 
 Sistema completo para gerenciamento de extintores, inspeções e manutenções.
@@ -317,3 +318,7 @@ Desenvolvido como projeto acadêmico.
 ---
 
 **🎉 Projeto 100% containerizado - Clone e rode em segundos!**
+=======
+# sge-fulll
+>>>>>>> fb3591a4b04547d28a24394f67e4400447992fbc
+# SGE-FULL
