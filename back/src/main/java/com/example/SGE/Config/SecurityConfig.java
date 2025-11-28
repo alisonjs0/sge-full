@@ -48,7 +48,7 @@ public class SecurityConfig {
                         // Endpoints públicos (devem vir PRIMEIRO - ordem importa!)
                         .requestMatchers("/health/**").permitAll()
                         .requestMatchers("/health").permitAll()
-                        .requestMatchers("/token-infinito/**").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         // Permitir criação de usuário sem autenticação (POST)
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()

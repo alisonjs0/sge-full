@@ -70,19 +70,5 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateInfiniteToken(UserEntity userDetails) {
-        Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("id", userDetails.getId());
-        extraClaims.put("name", userDetails.getNome());
-        extraClaims.put("roles", userDetails.getRoles());
-        // Data de expiração: 31/12/2099
-        Date infiniteExpiration = new Date(4102444800000L); // 2099-12-31T00:00:00Z em ms
-        return Jwts.builder()
-                .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(infiniteExpiration)
-                .signWith(getSigningKey())
-                .compact();
-    }
+
 }
