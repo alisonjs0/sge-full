@@ -29,3 +29,4 @@ build/
 
 # Docker
 *.env.docker
+back/sge-backend.tar
