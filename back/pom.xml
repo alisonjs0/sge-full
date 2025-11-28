@@ -96,6 +96,11 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.1.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -116,13 +121,7 @@
                     <compilerArgs>--enable-preview</compilerArgs>
                 </configuration>
 			</plugin>
-			<plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <configuration>
-                <mainClass>com.example.SGE.SgeApplication</mainClass>
-            </configuration>
-        </plugin>
+			
 		</plugins>
 	</build>
 

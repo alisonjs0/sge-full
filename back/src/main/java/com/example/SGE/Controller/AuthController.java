@@ -28,8 +28,27 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
+    private final java.util.Map<String, io.github.bucket4j.Bucket> cache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private io.github.bucket4j.Bucket resolveBucket(String key) {
+        return cache.computeIfAbsent(key, k -> {
+            io.github.bucket4j.Bandwidth limit = io.github.bucket4j.Bandwidth.classic(5, io.github.bucket4j.Refill.intervally(5, java.time.Duration.ofMinutes(1)));
+            return io.github.bucket4j.Bucket.builder()
+                    .addLimit(limit)
+                    .build();
+        });
+    }
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
+        String ip = httpRequest.getRemoteAddr();
+        io.github.bucket4j.Bucket bucket = resolveBucket(ip);
+
+        if (!bucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Muitas tentativas. Tente novamente em 1 minuto.");
+        }
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password())
