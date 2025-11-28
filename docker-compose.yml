@@ -6,7 +6,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 896271
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: postgres
     ports:
       - "5434:5432"  # Porta 5434 no host para evitar conflito
@@ -29,10 +29,10 @@ services:
       # Configurações do banco de dados - CONECTA AO POSTGRES DOCKER HUB
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 896271
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       # Configurações JWT (usando as mesmas do application.properties)
-      JWT_SECRET: 602f31c91e483fb213f2a5f7bf364a14badc948099041e4e5f28d5795edd982f
+      JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: 3600000
       # Configurações do Spring Boot
       SPRING_PROFILES_ACTIVE: docker
@@ -56,7 +56,7 @@ services:
       NEXT_PUBLIC_API_URL: https://fire-guard-backend-783901794609.us-central1.run.app
       
       # JWT Secret para validação no middleware
-      JWT_SECRET: 602f31c91e483fb213f2a5f7bf364a14badc948099041e4e5f28d5795edd982f
+      JWT_SECRET: ${JWT_SECRET}
     # depends_on:
     #   - backend  # Descomente se usar backend local
     restart: unless-stopped
