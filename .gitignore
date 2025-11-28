@@ -30,3 +30,4 @@ build/
 # Docker
 *.env.docker
 back/sge-backend.tar
+RELATORIO_FINAL_LPI_SEGURANCA.md
