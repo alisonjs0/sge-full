@@ -21,7 +21,7 @@ public record RegisterRequestDTO(
     String senha,
 
     String cargo,
-    String roles,
+    
     @CreatedDate
     LocalDateTime createdDate
 ) {}

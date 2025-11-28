@@ -52,8 +52,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         // Permitir criação de usuário sem autenticação (POST)
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
-                        // Permitir listagem pública de usuários (GET)
-
                         // Todos os outros endpoints precisam de autenticação
                         .anyRequest().authenticated()
                 )

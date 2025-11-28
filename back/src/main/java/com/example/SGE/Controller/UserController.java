@@ -38,7 +38,7 @@ public class UserController {
         newUser.setEmail(data.email());
         newUser.setCpf(data.cpf());
         newUser.setSenha(data.senha());
-        newUser.setRoles(data.roles());
+        newUser.setRoles("USER");
         newUser.setCargo(data.cargo());
         newUser.setCreatedDate(LocalDateTime.now());
 
