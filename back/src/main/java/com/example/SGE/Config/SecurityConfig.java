@@ -50,8 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/health").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        // Permitir criação de usuário sem autenticação (POST)
-                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
                         // Todos os outros endpoints precisam de autenticação
                         .anyRequest().authenticated()
                 )
