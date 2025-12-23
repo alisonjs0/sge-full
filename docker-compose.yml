@@ -5,11 +5,11 @@ services:
     container_name: fire-guard-postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5434:5432"  # Porta 5434 no host para evitar conflito
+      - "${POSTGRES_PORT}:5432"  # Porta configurável no host para evitar conflito
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -24,18 +24,18 @@ services:
       context: ./back
       dockerfile: Dockerfile
     ports:
-      - "8081:8080"  # Backend local na porta 8081
+      - "${BACKEND_PORT}:8080"  # Backend local na porta configurável
     environment:
       # Configurações do banco de dados - CONECTA AO POSTGRES DOCKER HUB
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
-      # Configurações JWT (usando as mesmas do application.properties)
+      # Configurações JWT
       JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION: 3600000
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
       # Configurações do Spring Boot
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,13 +47,13 @@ services:
       context: ./front
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT}:3000"
     environment:
       # OPÇÃO A: Backend local (descomente para usar backend local)
-      # NEXT_PUBLIC_API_URL: http://localhost:8081
+      # NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT}
       
       # OPÇÃO B: Backend Cloud Run (padrão - sem depender do backend local)
-      NEXT_PUBLIC_API_URL: https://fire-guard-backend-783901794609.us-central1.run.app
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       
       # JWT Secret para validação no middleware
       JWT_SECRET: ${JWT_SECRET}
