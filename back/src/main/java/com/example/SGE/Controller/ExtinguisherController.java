@@ -27,8 +27,10 @@ public class ExtinguisherController {
 
     @PostMapping
     public ExtinguisherEntity createExtinguisher(@RequestBody ExtinguisherEntity extinguisherEntity) {
-        // Aplicar status automático
-        statusService.applyAutoStatus(extinguisherEntity);
+        // Aplicar status automático apenas se o cliente não enviou um valor manual
+        if (extinguisherEntity.getStatus() == null || extinguisherEntity.getStatus().isBlank()) {
+            statusService.applyAutoStatus(extinguisherEntity);
+        }
         return extinguisherRepository.save(extinguisherEntity);
     }
 
@@ -81,8 +83,12 @@ public class ExtinguisherController {
                 existingExtinguisher.setUnidadeId(updateExtinguisher.getUnidadeId());
             }
 
-            // Aplicar status automático baseado na nova data de validade
-            statusService.applyAutoStatus(existingExtinguisher);
+            // Aplicar status manual se enviado; caso contrário, recalcular automaticamente
+            if (updateExtinguisher.getStatus() != null && !updateExtinguisher.getStatus().isBlank()) {
+                existingExtinguisher.setStatus(updateExtinguisher.getStatus());
+            } else {
+                statusService.applyAutoStatus(existingExtinguisher);
+            }
 
             extinguisherRepository.save(existingExtinguisher);
             

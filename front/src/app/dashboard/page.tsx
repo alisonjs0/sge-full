@@ -56,6 +56,7 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalExtintores: 0,
     extintoresConformes: 0,
+    extintoresProximosVencimento: 0,
     extintoresVencidos: 0,
     inspecoesMes: 0,
     manutencoesPendentes: 0,
@@ -67,7 +68,11 @@ const Dashboard: React.FC = () => {
     const endOfCurrentMonth = endOfMonth(now);
 
     const extintoresVencidos = extintores.filter((ext) =>
-      isBefore(new Date(ext.validade), now)
+      ext.status === "vencido"
+    ).length;
+
+    const extintoresProximos = extintores.filter(
+      (ext) => ext.status === "proximo_ao_vencimento"
     ).length;
 
     const extintoresConformes = extintores.filter(
@@ -86,19 +91,16 @@ const Dashboard: React.FC = () => {
     setStats({
       totalExtintores: extintores.length,
       extintoresConformes,
+      extintoresProximosVencimento: extintoresProximos,
       extintoresVencidos,
       inspecoesMes,
       manutencoesPendentes,
     });
   }, [extintores, inspecoes, manutencoes]);
-
-  const extintoresProximosVencimento = extintores.filter((ext) => {
-    const dataValidade = new Date(ext.validade);
-    const proximoMes = addMonths(new Date(), 1);
-    return (
-      isAfter(dataValidade, new Date()) && isBefore(dataValidade, proximoMes)
-    );
-  });
+  
+  const extintoresProximosVencimento = extintores.filter(
+    (ext) => ext.status === "proximo_ao_vencimento"
+  );
 
   const ultimasInspecoes = inspecoes
     .sort(
@@ -416,10 +418,10 @@ const Dashboard: React.FC = () => {
                     .length,
                 },
                 {
-                  status: "nao_conforme",
-                  label: "Não Conformes",
-                  color: "red",
-                  count: extintores.filter((e) => e.status === "nao_conforme")
+                  status: "proximo_ao_vencimento",
+                  label: "Próximo ao Vencimento",
+                  color: "yellow",
+                  count: extintores.filter((e) => e.status === "proximo_ao_vencimento")
                     .length,
                 },
                 {

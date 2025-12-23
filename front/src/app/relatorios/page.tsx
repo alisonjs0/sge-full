@@ -65,6 +65,7 @@ const Relatorios: React.FC = () => {
     
     const totalExtintores = fExtintores.length
     const extintoresConformes = fExtintores.filter(e => e.status === 'conforme').length
+    const extintoresProximos = fExtintores.filter(e => e.status === 'proximo_ao_vencimento').length
     const extintoresNaoConformes = fExtintores.filter(e => e.status === 'nao_conforme').length
     const extintoresVencidos = fExtintores.filter(e => e.status === 'vencido').length
     
@@ -83,6 +84,7 @@ const Relatorios: React.FC = () => {
       extintores: {
         total: totalExtintores,
         conformes: extintoresConformes,
+        proximos: extintoresProximos,
         naoConformes: extintoresNaoConformes,
         vencidos: extintoresVencidos,
         percentualConforme: totalExtintores > 0 ? (extintoresConformes / totalExtintores) * 100 : 0

@@ -14,7 +14,7 @@ import {
   FireExtinguisher
 } from "lucide-react";
 import { useCRUD } from "../../hooks/useCRUD";
-import { Extinguisher } from "../../types";
+import { Extinguisher, ExtinguisherStatus } from "../../types";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import MainHeader from "@/components/MainHeader";
@@ -86,10 +86,12 @@ const ExtintoresPage: React.FC = () => {
   };
 
   // Utilitários para renderização dos cards
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string) => {
     switch (status) {
       case "conforme":
         return "bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium";
+      case "proximo_ao_vencimento":
+        return "bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium";
       case "nao_conforme":
         return "bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium";
       case "vencido":
@@ -101,10 +103,12 @@ const ExtintoresPage: React.FC = () => {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status?: string) => {
     switch (status) {
       case "conforme":
         return "Conforme";
+      case "proximo_ao_vencimento":
+        return "Próximo ao Vencimento";
       case "nao_conforme":
         return "Não Conforme";
       case "vencido":
@@ -226,7 +230,7 @@ const ExtintoresPage: React.FC = () => {
     });
 
     // Mapeando dados do formulário para a estrutura do backend
-    const extintorData: Omit<Extinguisher, 'id'> = {
+    const extintorData: Omit<Extinguisher, 'id'> & { status?: ExtinguisherStatus } = {
       numeroIdentificacao: formData.get("numeroIdentificacao") as string,
       localizacao: formData.get("localizacao") as string,
       validade: formData.get("dataValidade") as string,
@@ -235,10 +239,14 @@ const ExtintoresPage: React.FC = () => {
       capacidade: formData.get("capacidade") as string,
       dataFabricacao: formData.get("dataFabricacao") as string,
       fabricante: formData.get("fabricante") as string,
-      status: formData.get("status") as string,
       observacoes: (formData.get("observacoes") as string) || "",
       unidadeId: Number(formData.get("unidadeId") as string),
     };
+
+    const statusSelecionado = formData.get("status") as string | null;
+    if (statusSelecionado) {
+      extintorData.status = statusSelecionado as ExtinguisherStatus;
+    }
 
     console.log('📋 Extintor Data - Preparado para envio:', formData);
 
@@ -320,6 +328,7 @@ const ExtintoresPage: React.FC = () => {
             >
               <option value="">Todos os status</option>
               <option value="conforme">Conforme</option>
+              <option value="proximo_ao_vencimento">Próximo ao Vencimento</option>
               <option value="nao_conforme">Não Conforme</option>
               <option value="vencido">Vencido</option>
               <option value="manutencao">Em Manutenção</option>
@@ -638,13 +647,13 @@ const ExtintoresPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Status Automático - Info Box */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  {/* Status Automático / Manual */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
                     <div className="flex gap-3">
                       <AlertTriangle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <h4 className="font-semibold text-blue-900 mb-2">Status Automático</h4>
-                        <p className="text-sm text-blue-800 mb-2">O status do extintor é calculado automaticamente com base na data de validade:</p>
+                        <p className="text-sm text-blue-800 mb-2">Por padrão o status é calculado com base na validade:</p>
                         <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
                           <li><span className="font-medium text-green-700">Conforme</span>: Válido e dentro do prazo</li>
                           <li><span className="font-medium text-yellow-700">Próximo ao Vencimento</span>: Faltam 30 dias ou menos</li>
@@ -652,6 +661,35 @@ const ExtintoresPage: React.FC = () => {
                         </ul>
                       </div>
                     </div>
+
+                    {editingExtintor && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-blue-900 mb-2">
+                            Status (apenas edição)
+                          </label>
+                          <select
+                            name="status"
+                            defaultValue={editingExtintor.status || ""}
+                            className="input-field"
+                          >
+                            <option value="">Automático pela validade</option>
+                            <option value="conforme">Conforme</option>
+                            <option value="proximo_ao_vencimento">Próximo ao Vencimento</option>
+                            <option value="vencido">Vencido</option>
+                            <option value="nao_conforme">Não Conforme</option>
+                            <option value="manutencao">Em Manutenção</option>
+                          </select>
+                          <p className="text-xs text-blue-800 mt-1">
+                            Selecione apenas quando precisar forçar um status específico. Deixe em branco para seguir o cálculo automático.
+                          </p>
+                        </div>
+                        <div className="text-sm text-blue-900">
+                          <p className="font-semibold mb-1">Dica</p>
+                          <p>Ao salvar uma inspeção o sistema também ajusta o status automaticamente conforme o resultado.</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Observações */}

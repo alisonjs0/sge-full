@@ -24,6 +24,13 @@ export interface Unidade {
   updatedAt: string
 }
 
+export type ExtinguisherStatus =
+  | 'conforme'
+  | 'proximo_ao_vencimento'
+  | 'vencido'
+  | 'nao_conforme'
+  | 'manutencao';
+
 export interface Extinguisher {
   id?: number;
   numeroIdentificacao: string;
@@ -33,9 +40,9 @@ export interface Extinguisher {
   capacidade: string;
   validade: Date | string; // Backend usa nome em português - Aceita Date (frontend) ou string ISO (backend)
   dataFabricacao: Date | string; // Backend usa nome em português - Aceita Date (frontend) ou string ISO (backend)
-  fabricante: string;
-  status: string;
-  observacoes: string;
+  fabricante?: string;
+  status?: ExtinguisherStatus;
+  observacoes?: string;
   unidadeId: number;
 }
 
@@ -183,6 +190,7 @@ export interface Usuario {
 export interface DashboardStats {
   totalExtintores: number
   extintoresConformes: number
+  extintoresProximosVencimento: number
   extintoresVencidos: number
   inspecoesMes: number
   manutencoesPendentes: number
