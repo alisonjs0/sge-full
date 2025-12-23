@@ -144,6 +144,10 @@ const ExtintoresPage: React.FC = () => {
     updateRecord,
     deleteRecord,
   } = useCRUD<Extinguisher>("extinguisher");
+
+  const {
+    data: unidades,
+  } = useCRUD("unidade");
   
   // Função para sanitizar dados de extintores
   const sanitizeExtinguisher = (extintor: any): Extinguisher => {
@@ -169,9 +173,31 @@ const ExtintoresPage: React.FC = () => {
   }, []);
   const [showForm, setShowForm] = useState(false);
   const [editingExtintor, setEditingExtintor] = useState<Extinguisher | null>(null);
+  const [generatedNumber, setGeneratedNumber] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [tipoFilter, setTipoFilter] = useState("");
+
+  // Função para gerar número de identificação automático
+  const generateExtinguisherNumber = () => {
+    const nextNumber = (rawExtintores?.length || 0) + 1;
+    const paddedNumber = String(nextNumber).padStart(5, '0');
+    return `EXT-${paddedNumber}`;
+  };
+
+  // Abrir formulário com número gerado
+  const handleOpenForm = () => {
+    setEditingExtintor(null);
+    setGeneratedNumber(generateExtinguisherNumber());
+    setShowForm(true);
+  };
+
+  // Abrir formulário para editar
+  const handleEditForm = (extintor: Extinguisher) => {
+    setEditingExtintor(extintor);
+    setGeneratedNumber("");
+    setShowForm(true);
+  };
 
   // Filtrar extintores (definido de forma segura para evitar campos undefined)
   const safeExtintores = Array.isArray(extintores) ? extintores : [];
@@ -242,11 +268,6 @@ const ExtintoresPage: React.FC = () => {
     }
   };
 
-  const handleEdit = (extintor: Extinguisher) => {
-    setEditingExtintor(extintor);
-    setShowForm(true);
-  };
-
   if (!hasMounted || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex justify-center items-center">
@@ -266,10 +287,7 @@ const ExtintoresPage: React.FC = () => {
           showButton={true}
           buttonText="Novo Extintor"
           buttonIcon={<Plus className="w-5 h-5" />}
-          onButtonClick={() => {
-            setEditingExtintor(null);
-            setShowForm(true);
-          }}
+          onButtonClick={handleOpenForm}
         />
       </div>
 
@@ -364,7 +382,7 @@ const ExtintoresPage: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => handleEdit(extintor)}
+                    onClick={() => handleEditForm(extintor)}
                     className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                   >
                     <Edit className="w-4 h-4" />
@@ -454,11 +472,13 @@ const ExtintoresPage: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
             >
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">
+              <div className="p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-8">
                   {editingExtintor ? "Editar Extintor" : "Novo Extintor"}
-                </h3>
+                </h2>
+                
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Primeira linha - Número e Unidade */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -467,10 +487,12 @@ const ExtintoresPage: React.FC = () => {
                       <input
                         name="numeroIdentificacao"
                         type="text"
-                        defaultValue={editingExtintor?.numeroIdentificacao || ''}
+                        value={editingExtintor ? editingExtintor.numeroIdentificacao : generatedNumber}
+                        onChange={(e) => !editingExtintor && setGeneratedNumber(e.target.value)}
                         required
-                        className="input-field"
-                        placeholder="Ex: EXT-001"
+                        className={`input-field ${editingExtintor ? '' : 'bg-gray-100'}`}
+                        placeholder="EXT-00147"
+
                       />
                     </div>
                     
@@ -478,30 +500,39 @@ const ExtintoresPage: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Unidade *
                       </label>
-                      <input
+                      <select
                         name="unidadeId"
-                        type="text"
                         defaultValue={editingExtintor?.unidadeId || ''}
                         required
                         className="input-field"
-                        placeholder="ID ou nome da unidade"
-                      />
+                      >
+                        <option value="">Selecione uma unidade</option>
+                        {unidades && Array.isArray(unidades) && unidades.map((unidade: any) => (
+                          <option key={unidade.id} value={unidade.id}>
+                            {unidade.nome}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Localização *
-                      </label>
-                      <input
-                        name="localizacao"
-                        type="text"
-                        defaultValue={editingExtintor?.localizacao || ''}
-                        required
-                        className="input-field"
-                        placeholder="Ex: Corredor principal - Próximo à recepção"
-                      />
-                    </div>
-                    
+                  </div>
+
+                  {/* Localização - Linha inteira */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Localização *
+                    </label>
+                    <input
+                      name="localizacao"
+                      type="text"
+                      defaultValue={editingExtintor?.localizacao || ''}
+                      required
+                      className="input-field"
+                      placeholder="Ex: Corredor principal - Próximo à recepção"
+                    />
+                  </div>
+
+                  {/* Tipo de Agente e Classe de Incêndio */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Tipo de Agente *
@@ -540,35 +571,46 @@ const ExtintoresPage: React.FC = () => {
                         <option value="ABC">Classe ABC</option>
                       </select>
                     </div>
-                    
+                  </div>
+
+                  {/* Capacidade e Fabricante */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Capacidade *
                       </label>
-                      <input
-                        name="capacidade"
-                        type="text"
-                        defaultValue={editingExtintor?.capacidade || ''}
-                        required
-                        className="input-field"
-                        placeholder="Ex: 4kg, 6L"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          name="capacidade"
+                          type="number"
+                          defaultValue={editingExtintor?.capacidade?.toString().match(/\d+/)?.[0] || ''}
+                          required
+                          className="input-field flex-1"
+                          placeholder="Ex: 4, 6, 12"
+                        />
+                        <select className="w-20 input-field">
+                          <option>kg</option>
+                          <option>L</option>
+                        </select>
+                      </div>
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Fabricante *
+                        Fabricante
                       </label>
                       <input
                         name="fabricante"
                         type="text"
                         defaultValue={editingExtintor?.fabricante || ''}
-                        required
                         className="input-field"
                         placeholder="Nome do fabricante"
                       />
                     </div>
-                    
+                  </div>
+
+                  {/* Datas */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Data de Fabricação *
@@ -594,52 +636,52 @@ const ExtintoresPage: React.FC = () => {
                         className="input-field"
                       />
                     </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Status *
-                      </label>
-                      <select
-                        name="status"
-                        defaultValue={editingExtintor?.status || 'conforme'}
-                        required
-                        className="input-field"
-                      >
-                        <option value="conforme">Conforme</option>
-                        <option value="nao_conforme">Não Conforme</option>
-                        <option value="vencido">Vencido</option>
-                        <option value="manutencao">Em Manutenção</option>
-                      </select>
-                    </div>
-                  
-                    
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Observações
-                      </label>
-                      <textarea
-                        name="observacoes"
-                        rows={3}
-                        defaultValue={editingExtintor?.observacoes || ''}
-                        className="input-field"
-                        placeholder="Observações gerais sobre o extintor..."
-                      />
+                  </div>
+
+                  {/* Status Automático - Info Box */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex gap-3">
+                      <AlertTriangle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-blue-900 mb-2">Status Automático</h4>
+                        <p className="text-sm text-blue-800 mb-2">O status do extintor é calculado automaticamente com base na data de validade:</p>
+                        <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
+                          <li><span className="font-medium text-green-700">Conforme</span>: Válido e dentro do prazo</li>
+                          <li><span className="font-medium text-yellow-700">Próximo ao Vencimento</span>: Faltam 30 dias ou menos</li>
+                          <li><span className="font-medium text-red-700">Vencido</span>: Data de validade já passou</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+
+                  {/* Observações */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Observações
+                    </label>
+                    <textarea
+                      name="observacoes"
+                      rows={3}
+                      defaultValue={editingExtintor?.observacoes || ''}
+                      className="input-field resize-none"
+                      placeholder="Observações gerais sobre o extintor..."
+                    />
+                  </div>
+
+                  {/* Botões de ação */}
+                  <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
                     <button
                       type="button"
                       onClick={() => { setShowForm(false); setEditingExtintor(null) }}
-                      className="btn-secondary"
+                      className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="btn-primary"
+                      className="px-6 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
                     >
-                      {editingExtintor ? 'Atualizar' : 'Criar'} Extintor
+                      {editingExtintor ? 'Atualizar' : 'Confirmar'}
                     </button>
                   </div>
                 </form>
