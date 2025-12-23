@@ -21,6 +21,8 @@ const Relatorios: React.FC = () => {
   })
   const [selectedUnidade, setSelectedUnidade] = useState<string>('todas')
   const [reportType, setReportType] = useState<string>('geral')
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportMessage, setExportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // Dados filtrados por período e unidade
   const filteredData = useMemo(() => {
@@ -166,23 +168,111 @@ const Relatorios: React.FC = () => {
     return meses
   }, [inspecoes, manutencoes])
 
-  const exportarRelatorio = () => {
-    // Implementar exportação para PDF/Excel
-    console.log('Exportando relatório...')
+  const exportarRelatorio = async () => {
+    try {
+      setIsExporting(true)
+      setExportMessage(null)
+
+      // Mapear tipo de relatório
+      const reportTypeMap: { [key: string]: 'summary' | 'inspections' | 'maintenance' | 'alerts' | 'equipment' } = {
+        'geral': 'summary',
+        'extintores': 'equipment',
+        'inspecoes': 'inspections',
+        'manutencoes': 'maintenance'
+      }
+
+      const mappedType = reportTypeMap[reportType] || 'summary'
+
+      // Preparar filtros
+      const filters = {
+        dateStart: dateRange.start,
+        dateEnd: dateRange.end,
+        ...(selectedUnidade !== 'todas' && { unitId: Number(selectedUnidade) })
+      }
+
+      // Preparar dados adicionais do relatório
+      const reportData = {
+        reportType: mappedType,
+        format: 'json',
+        filters,
+        // Incluir dados por unidade no relatório
+        dadosPorUnidade,
+        // Incluir estatísticas
+        estatisticas: stats,
+        // Incluir dados filtrados
+        dados: {
+          extintores: filteredData.extintores,
+          inspecoes: filteredData.inspecoes,
+          manutencoes: filteredData.manutencoes
+        }
+      }
+
+      // Enviar para backend
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/reports/export`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          },
+          body: JSON.stringify(reportData)
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      setExportMessage({
+        type: 'success',
+        text: `Relatório ${reportType} enviado com sucesso para o webhook!`
+      })
+
+      console.log('✓ Relatório exportado:', result)
+    } catch (error) {
+      console.error('Erro ao exportar relatório:', error)
+      setExportMessage({
+        type: 'error',
+        text: 'Erro ao exportar relatório. Verifique se o webhook está configurado corretamente.'
+      })
+    } finally {
+      setIsExporting(false)
+      // Limpar mensagem após 5 segundos
+      setTimeout(() => setExportMessage(null), 5000)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Mensagem de Export */}
+        {exportMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`mb-4 p-4 rounded-lg ${
+              exportMessage.type === 'success'
+                ? 'bg-green-100 border border-green-400 text-green-800'
+                : 'bg-red-100 border border-red-400 text-red-800'
+            }`}
+          >
+            {exportMessage.text}
+          </motion.div>
+        )}
+
         {/* Header */}
         <MainHeader
           icon={<FileText className="text-blue-600" />}
           textHeader="Relatórios"
           subtitle="Análises e estatísticas do sistema"
           showButton={true}
-          buttonText="Exportar Relatório"
+          buttonText={isExporting ? 'Exportando...' : 'Exportar Relatório'}
           buttonIcon={<Download size={20} />}
-          
+          onButtonClick={exportarRelatorio}
         />
 
 
@@ -409,7 +499,7 @@ const Relatorios: React.FC = () => {
           transition={{ delay: 0.5 }}
           className="bg-white rounded-xl shadow-sm overflow-hidden"
         >
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <MapPin className="h-5 w-5 text-green-600" />
               Dados por Unidade
