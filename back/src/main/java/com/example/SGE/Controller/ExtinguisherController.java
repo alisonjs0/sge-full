@@ -2,6 +2,7 @@ package com.example.SGE.Controller;
 
 import com.example.SGE.Entity.ExtinguisherEntity;
 import com.example.SGE.Repository.ExtinguisherRepository;
+import com.example.SGE.Service.ExtinguisherStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,13 +16,19 @@ public class ExtinguisherController {
 
     @Autowired
     private final ExtinguisherRepository extinguisherRepository;
+    
+    @Autowired
+    private final ExtinguisherStatusService statusService;
 
-    public ExtinguisherController(ExtinguisherRepository extinguisherRepository){
+    public ExtinguisherController(ExtinguisherRepository extinguisherRepository, ExtinguisherStatusService statusService){
         this.extinguisherRepository = extinguisherRepository;
+        this.statusService = statusService;
     }
 
     @PostMapping
     public ExtinguisherEntity createExtinguisher(@RequestBody ExtinguisherEntity extinguisherEntity) {
+        // Aplicar status automático
+        statusService.applyAutoStatus(extinguisherEntity);
         return extinguisherRepository.save(extinguisherEntity);
     }
 
@@ -69,11 +76,13 @@ public class ExtinguisherController {
             existingExtinguisher.setCapacidade(updateExtinguisher.getCapacidade());
             existingExtinguisher.setDataFabricacao(updateExtinguisher.getDataFabricacao());
             existingExtinguisher.setFabricante(updateExtinguisher.getFabricante());
-            existingExtinguisher.setStatus(updateExtinguisher.getStatus());
             existingExtinguisher.setObservacoes(updateExtinguisher.getObservacoes());
             if (updateExtinguisher.getUnidadeId() != null) {
                 existingExtinguisher.setUnidadeId(updateExtinguisher.getUnidadeId());
             }
+
+            // Aplicar status automático baseado na nova data de validade
+            statusService.applyAutoStatus(existingExtinguisher);
 
             extinguisherRepository.save(existingExtinguisher);
             
